@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>PIN MAKER</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  * {
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background-color: #000000;
+    font-family: 'Share Tech Mono', monospace;
+    user-select: none;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    background-color: #000;
+    display: block;
+  }
+  .container {
+    position: relative;
+    z-index: 10;
+    background-color: #021a02;
+    border: 2px solid #00ff00;
+    border-radius: 8px;
+    padding: 24px 30px 32px;
+    width: 90vw;
+    max-width: 360px;
+    max-height: 95vh;
+    box-shadow:
+      0 0 8px #00ff00,
+      0 0 12px #00ff00,
+      0 0 18px #00ff00;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: #00ff00;
+    user-select: text;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  h1 {
+    font-weight: 700;
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    text-shadow:
+      0 0 5px #00ff00,
+      0 0 10px #00ff00,
+      0 0 20px #00ff00;
+  }
+  label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: #00ff00aa;
+    text-shadow: 0 0 2px #00ff00;
+  }
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1.5px solid #00ff00;
+    background-color: #001400;
+    color: #00ff00;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    outline: none;
+    transition: box-shadow 0.3s ease;
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  select:focus {
+    box-shadow:
+      0 0 8px #00ff00,
+      0 0 12px #00ff00;
+    border-color: #00ff00;
+    background-color: #002200;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input::placeholder {
+    color: #00ff0077;
+    font-style: italic;
+  }
+  button {
+    margin-top: 14px;
+    background-color: #003300;
+    border: 1.5px solid #00ff00;
+    border-radius: 6px;
+    padding: 14px;
+    color: #00ff00;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 1.5px;
+    transition:
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  button:hover:not(:disabled),
+  button:focus:not(:disabled) {
+    background-color: #005500;
+    box-shadow:
+      0 0 12px #00ff00,
+      0 0 20px #00ff00;
+    outline: none;
+    transform: scale(1.05);
+  }
+  button:disabled {
+    background-color: #001200;
+    border-color: #003300;
+    color: #004400;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  .output-container {
+    margin-top: 28px;
+    background-color: #001400;
+    border: 1.5px solid #00ff00;
+    border-radius: 6px;
+    padding: 16px 20px;
+    user-select: text;
+    word-break: break-word;
+    display: none;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow:
+      inset 0 0 10px #00ff00aa;
+  }
+  .output-container.visible {
+    display: flex;
+  }
+  .output-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #00ff00;
+    flex: 1 1 auto;
+    margin-right: 16px;
+    letter-spacing: 2px;
+    text-shadow:
+      0 0 4px #00ff00,
+      0 0 8px #00ff00;
+  }
+  .copy-button {
+    background-color: #004400;
+    border: 1.5px solid #00ff00;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 700;
+    color: #00ff00;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-family: 'Share Tech Mono', monospace;
+    transition:
+      background-color 0.3s ease,
+      box-shadow 0.3s ease;
+    flex-shrink: 0;
+    letter-spacing: 1.5px;
+    text-shadow:
+      0 0 5px #00ff00;
+  }
+  .copy-button:hover,
+  .copy-button:focus {
+    background-color: #007700;
+    box-shadow:
+      0 0 12px #00ff00,
+      0 0 25px #00ff00;
+    outline: none;
+  }
+
+  /* Scrollbar styling for container overflow on mobile */
+  .container::-webkit-scrollbar {
+    width: 6px;
+  }
+  .container::-webkit-scrollbar-thumb {
+    background-color: #00ff00aa;
+    border-radius: 3px;
+  }
+  .container::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  @media (max-width: 400px) {
+    .container {
+      width: 95vw;
+      padding: 18px 20px 28px;
+    }
+    .output-text {
+      font-size: 1rem;
+      letter-spacing: 1.2px;
+    }
+    button {
+      font-size: 1rem;
+      letter-spacing: 1.2px;
+      padding: 12px;
+    }
+    .copy-button {
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      letter-spacing: 1.2px;
+    }
+    .logo {
+     
+  }
+  }
+</style>
+</head>
+<body>
+  <canvas id="bgCanvas"></canvas>
+  <div class="container" role="main" aria-label="Form pembuat PIN">
+    <h1>PIN MAKER</h1>
+    <center><img src="https://see.fontimg.com/api/rf5/JRgPo/YzY0YzQ4YTg3ODkyNDNhMDgzYWRkMmJjNDU0ZmU0ZWQub3Rm/Q3JlYXRlZCBieSBsM3Q/supercharge.png?r=fs&h=6&w=1000&fg=43A223&bg=000000&tb=1&s=6" alt="Logo" class="logo" style=" max-width: 50%; height: auto; display: block; margin: 0; padding: 0;" /></center>
+    <br><br>
+    <audio controls>
+      <source src="path/to/your-audio-file.mp3" type="audio/mpeg">
+  </audio>
+    <form id="pinForm" novalidate>
+      <label for="nameInput">Name</label>
+      <input type="text" id="nameInput" name="name" placeholder="Your Name!" autocomplete="off" required aria-required="true" />
+
+      <label for="dateInput">Date of Birth</label>
+      <input type="number" id="dateInput" name="date" placeholder="1 - 31" min="1" max="31" required aria-required="true" />
+
+      <label for="monthInput">Month of Birth</label>
+      <select id="monthInput" name="month" required aria-required="true">
+          <option value="" disabled selected>Select month</option>
+          <option value="01">January</option>
+          <option value="02">February</option>
+          <option value="03">March</option>
+          <option value="04">April</option>
+          <option value="05">May</option>
+          <option value="06">June</option>
+          <option value="07">July</option>
+          <option value="08">August</option>
+          <option value="09">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+      </select>
+
+      <button type="submit" aria-label="Generate PIN" id="generateButton" disabled>Generate PIN</button>
+    </form>
+
+    <div id="outputContainer" class="output-container" aria-live="polite" aria-atomic="true" role="region" aria-label="Hasil PIN">
+      <div id="output" class="output-text"></div>
+      <button id="copyBtn" class="copy-button" aria-label="Salin PIN ke papan klip" title="Salin PIN">Copy</button>
+      
+    </div>
+  </div>
+
+<script>
+  // Canvas technology background animation
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const pointsCount = Math.floor((width + height) / 50);
+  const points = [];
+  function randomRange(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+  for (let i = 0; i < pointsCount; i++) {
+    points.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: randomRange(-0.3, 0.3),
+      vy: randomRange(-0.3, 0.3),
+      radius: 1.5
+    });
+  }
+  function distance(p1, p2) {
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+    for (let i = 0; i < pointsCount; i++) {
+      for (let j = i + 1; j < pointsCount; j++) {
+        const dist = distance(points[i], points[j]);
+        if (dist < 130) {
+          const opacity = 1 - dist / 130;
+          ctx.strokeStyle = `rgba(0, 255, 0, ${opacity * 0.3})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(points[i].x, points[i].y);
+          ctx.lineTo(points[j].x, points[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    for (let p of points) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,255,0,0.8)';
+      ctx.shadowColor = '#00ff00';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+  function update() {
+    for (let p of points) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0 || p.x > width) p.vx *= -1;
+      if (p.y < 0 || p.y > height) p.vy *= -1;
+    }
+  }
+  function animate() {
+    update();
+    draw();
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // PIN generator code
+  const form = document.getElementById('pinForm');
+  const outputContainer = document.getElementById('outputContainer');
+  const output = document.getElementById('output');
+  const copyBtn = document.getElementById('copyBtn');
+  const generateBtn = document.getElementById('generateButton');
+
+  function generatePin(name, date, month) {
+    let sumName = 0;
+    for (let ch of name) {
+      sumName += ch.charCodeAt(0);
+    }
+    const nameNumber = (sumName % 100).toString().padStart(2, '0');
+
+    const d = date.toString().padStart(2, '0');
+    const m = month.toString().padStart(2, '0');
+
+    const revDate = d.split('').reverse().join('');
+    const revMonth = m.split('').reverse().join('');
+    const revDM = revDate + revMonth;
+
+    const sumDateMonth = d.split('').reduce((a,b) => a + parseInt(b), 0) + m.split('').reduce((a,b) => a + parseInt(b), 0);
+    const sumDigitsName = nameNumber.split('').reduce((a,b) => a + parseInt(b), 0);
+
+    const checksum = ((sumDigitsName + sumDateMonth) % 100).toString().padStart(2, '0');
+
+    return nameNumber + revDM + checksum;
+  }
+
+  function validateInputs() {
+    const name = form.name.value.trim();
+    const date = form.date.value;
+    const month = form.month.value;
+
+    if (
+      name.length > 0 &&
+      /^\d+$/.test(date) && Number(date) >= 1 && Number(date) <= 31 &&
+      month !== ""
+    ) {
+      generateBtn.disabled = false;
+    } else {
+      generateBtn.disabled = true;
+      hideOutput();
+    }
+  }
+
+  function showOutput(pin) {
+    output.textContent = `YOUR PIN: ${pin}`;
+    outputContainer.classList.add('visible');
+  }
+
+  function hideOutput() {
+    outputContainer.classList.remove('visible');
+    output.textContent = '';
+  }
+
+  copyBtn.addEventListener('click', () => {
+    const pinText = output.textContent.replace('YOUR PIN: ', '').trim();
+    if (!pinText) return;
+    navigator.clipboard.writeText(pinText).then(() => {
+      copyBtn.textContent = 'Done!';
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy';
+      }, 1500);
+    });
+  });
+
+  ['input', 'change'].forEach(eventName => {
+    form.name.addEventListener(eventName, validateInputs);
+    form.date.addEventListener(eventName, validateInputs);
+    form.month.addEventListener(eventName, validateInputs);
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = form.name.value.trim();
+    const date = parseInt(form.date.value, 10);
+    const month = form.month.value;
+
+    if (name.length === 0) {
+      alert('Input Your Name!');
+      return;
+    }
+    if (isNaN(date) || date < 1 || date > 31) {
+      alert('Date of birth must be between 1 and 31.');
+      return;
+    }
+    if (!month || !(parseInt(month) >= 1 && parseInt(month) <= 12)) {
+      alert('Please select a valid month of birth!');
+      return;
+    }
+
+    const pin = generatePin(name, date, month);
+
+    showOutput(pin);
+  });
+</script>
+
+</body>
+</html>
